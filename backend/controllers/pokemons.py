@@ -26,8 +26,7 @@ class PokemonsController(Resource):
                     weight=weight,
                     image_url=image_url
                 )
-            if pokemon:
-                return jsonify(message="Successfully Created")
+        return jsonify(message="Successfully Created")
 
     @paginate(model=Pokemon, schema_class=PokemonSchema,
               sortable_fields=['name', 'base_experience', 'height', 'weight'])

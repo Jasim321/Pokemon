@@ -1,4 +1,4 @@
-import React, {ChangeEvent, useEffect, useState} from 'react';
+import React, { ChangeEvent, useEffect, useState } from 'react';
 import axios from 'axios';
 import Pagination from 'react-bootstrap/Pagination';
 import FormControl from 'react-bootstrap/FormControl';
@@ -21,13 +21,11 @@ const PokemonTable: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterBy, setFilterBy] = useState('');
-    const [filterHeightValue, setFilterHeightValue] = useState<number | null>(null);
-
 
     const fetchPokemonData = async () => {
         try {
             const requestConfig = {
-                params: {page: currentPage, name: searchTerm},
+                params: { page: currentPage, name: searchTerm },
             };
             const response = await axios.get(`/pokemons`, requestConfig);
             setPokemonData(response.data.items);
@@ -39,37 +37,36 @@ const PokemonTable: React.FC = () => {
     useEffect(() => {
         fetchPokemonData();
     }, [currentPage, searchTerm, filterBy]);
+
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
     };
 
     const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
         setSearchTerm(event.target.value);
-        console.log("Search Term Changed:", event.target.value);
         setCurrentPage(1);
     };
 
     const handleFilterChange = (event: ChangeEvent<any>) => {
         const newFilter = event.target.value;
         setFilterBy(newFilter);
-        console.log("Filtersss Changed:", newFilter);
         setCurrentPage(1);
     };
 
+    // Determine the maximum values
+    const maxExperience = Math.max(...pokemonData.map(pokemon => pokemon.base_experience));
+    const maxHeight = Math.max(...pokemonData.map(pokemon => pokemon.height));
+    const maxWeight = Math.max(...pokemonData.map(pokemon => pokemon.weight));
 
     const filteredPokemonData = pokemonData
         .filter((pokemon) => {
-            const nameMatch = pokemon.name.toLowerCase().includes(searchTerm.toLowerCase());
-            const experienceFilter = filterBy === 'base_experience' && pokemon.base_experience > 50;
+            const nameMatch = searchTerm ? pokemon.name.toLowerCase().includes(searchTerm.toLowerCase()) : true;
+            const experienceFilter = filterBy === 'base_experience' && pokemon.base_experience === maxExperience;
+            const heightFilter = filterBy === 'height' && pokemon.height === maxHeight;
+            const weightFilter = filterBy === 'weight' && pokemon.weight === maxWeight;
 
-            // Moved the heightFilter logic here
-            const heightFilter = filterBy === 'height' && typeof filterHeightValue === 'number' && pokemon.height > filterHeightValue;
-
-            const weightFilter = filterBy === 'weight' && pokemon.weight > 20;
-
-            return nameMatch && (filterBy === '' || experienceFilter || heightFilter || weightFilter);
+            return nameMatch && (!filterBy || experienceFilter || heightFilter || weightFilter);
         });
-
 
     return (
         <div>
@@ -88,18 +85,17 @@ const PokemonTable: React.FC = () => {
             </FormControl>
             <Table striped bordered hover>
                 <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Base Experience</th>
-                    <th>Height</th>
-                    <th>Weight</th>
-                    <th>Image</th>
-                </tr>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Base Experience</th>
+                        <th>Height</th>
+                        <th>Weight</th>
+                        <th>Image</th>
+                    </tr>
                 </thead>
                 <tbody>
-                {filteredPokemonData
-                    .map((pokemon) => (
+                    {filteredPokemonData.map((pokemon) => (
                         <tr key={pokemon.id}>
                             <td>{pokemon.id}</td>
                             <td>{pokemon.name}</td>
@@ -107,14 +103,14 @@ const PokemonTable: React.FC = () => {
                             <td>{pokemon.height}</td>
                             <td>{pokemon.weight}</td>
                             <td>
-                                <PokemonImage imageUrl={pokemon.image_url} altText={pokemon.name}/>
+                                <PokemonImage imageUrl={pokemon.image_url} altText={pokemon.name} />
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </Table>
             <Pagination>
-                {Array.from({length: Math.ceil(filteredPokemonData.length / ITEMS_PER_PAGE)}).map((_, index) => (
+                {Array.from({ length: Math.ceil(filteredPokemonData.length / ITEMS_PER_PAGE) }).map((_, index) => (
                     <Pagination.Item
                         key={index}
                         active={index + 1 === currentPage}
